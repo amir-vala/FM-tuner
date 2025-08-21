@@ -15,13 +15,14 @@ static const IID IID_IVirtualRadioControl =
 { 0x12ca9c4d, 0x0d30, 0x4571, { 0x8f, 0xde, 0x2b, 0xa5, 0xb4, 0xc7, 0xf4, 0xd3 } };
 
 struct __declspec(uuid("12CA9C4D-0D30-4571-8FDE-2BA5B4C7F4D3")) IVirtualRadioControl : public IUnknown {
-    virtual HRESULT __stdcall SetFrequency(double mhz) = 0; // maps to URL
+    virtual HRESULT __stdcall SetFrequency(double mhz) = 0; // maps to URL via stations.json
     virtual HRESULT __stdcall SetDirectUrl(BSTR url) = 0;   // bypass mapping
 };
 
 class VirtualRadioStream;
 
-class VirtualRadioSource : public CSource, public IVirtualRadioControl {
+class VirtualRadioSource : public CSource, public IVirtualRadioControl
+{
 public:
     static CUnknown* WINAPI CreateInstance(LPUNKNOWN pUnk, HRESULT* phr);
     DECLARE_IUNKNOWN;
@@ -41,7 +42,8 @@ private:
     std::wstring url_;
 };
 
-class VirtualRadioStream : public CSourceStream {
+class VirtualRadioStream : public CSourceStream
+{
 public:
     VirtualRadioStream(HRESULT* phr, VirtualRadioSource* pParent);
     ~VirtualRadioStream();
@@ -50,10 +52,15 @@ public:
     HRESULT GetMediaType(CMediaType* pmt) override;
     HRESULT DecideBufferSize(IMemAllocator* pAlloc, ALLOCATOR_PROPERTIES* pprop) override;
 
+    // lifecycle: ensure decoder thread is managed with graph run/stop
+    HRESULT Active() override;
+    HRESULT Inactive() override;
+
     void SetUrl(const std::wstring& url);
 
 private:
     REFERENCE_TIME rtNext_ = 0; // 100ns units
     DecodedFormat fmt_{};
     FfmpegDecoder dec_;
+    std::wstring url_; // keep last URL to (re)open on Active
 };
