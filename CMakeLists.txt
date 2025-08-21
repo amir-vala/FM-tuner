@@ -3,7 +3,10 @@ project(VirtualRadioSource LANGUAGES CXX C)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS OFF)
-add_definitions(-DUNICODE -D_UNICODE -DWIN32_LEAN_AND_MEAN)
+
+add_definitions(-DUNICODE -D_UNICODE -DWIN32_LEAN_AND_MEAN -DNOMINMAX)
+# هدف ویندوز 7
+add_definitions(-D_WIN32_WINNT=0x0601)
 
 # Adjust these paths
 set(FFMPEG_ROOT "C:/ffmpeg")
@@ -13,6 +16,7 @@ include_directories(
     ${BASECLASSES_ROOT}
     ${FFMPEG_ROOT}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/include
+    # اگر json.hpp را در include/nlohmann گذاشتی، همین کافی‌ست
 )
 
 link_directories(
