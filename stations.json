@@ -1,0 +1,12 @@
+[
+    {
+        "guideName": "Radio Javan",
+        "guideNumber": "101",
+        "url": "https://host2.asandl.com:8080/radiojavan"
+    },
+    {
+        "guideName": "Radio Farda",
+        "guideNumber": "102",
+        "url": "https://www.radiofarda.com/live/audio/44"
+    }
+]
