@@ -16,7 +16,7 @@
 
 class DiscoveryServer {
 public:
-    DiscoveryServer(uint32_t deviceId, int httpPort);
+    DiscoveryServer(uint32_t deviceId, int httpPort, const std::string& localIp);
     ~DiscoveryServer();
     bool start();
     void stop();
@@ -27,6 +27,7 @@ private:
 
     uint32_t deviceId_;
     int httpPort_;
+    std::string localIp_;
     SOCKET sock_ = INVALID_SOCKET;
     bool running_ = false;
     std::thread thread_;

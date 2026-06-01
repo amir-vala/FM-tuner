@@ -3,8 +3,8 @@
 #include <thread>
 #include <vector>
 
-DiscoveryServer::DiscoveryServer(uint32_t deviceId, int httpPort)
-    : deviceId_(deviceId), httpPort_(httpPort) {}
+DiscoveryServer::DiscoveryServer(uint32_t deviceId, int httpPort, const std::string& localIp)
+    : deviceId_(deviceId), httpPort_(httpPort), localIp_(localIp) {}
 
 DiscoveryServer::~DiscoveryServer() {
     stop();
@@ -50,6 +50,10 @@ void DiscoveryServer::run() {
         uint16_t type = (buffer[0] << 8) | buffer[1];
         if (type != HDHOMERUN_TYPE_DISCOVER_REQ) continue;
 
+        char clientIP[INET_ADDRSTRLEN];
+        inet_ntop(AF_INET, &(clientAddr.sin_addr), clientIP, INET_ADDRSTRLEN);
+        std::cout << "[Discovery] Request received from " << clientIP << std::endl;
+
         // Simplified response construction
         std::vector<uint8_t> payload;
 
@@ -67,10 +71,7 @@ void DiscoveryServer::run() {
         payload.push_back(deviceId_ & 0xFF);
 
         // Tag Base URL
-        std::string baseUrl = "http://";
-        // Simple logic for IP (this should ideally be the actual local IP, but 127.0.0.1 for local test)
-        // For production, we should detect the interface IP.
-        baseUrl += "127.0.0.1:" + std::to_string(httpPort_);
+        std::string baseUrl = "http://" + localIp_ + ":" + std::to_string(httpPort_);
         payload.push_back(HDHOMERUN_TAG_BASE_URL);
         payload.push_back((uint8_t)baseUrl.length());
         for(char c : baseUrl) payload.push_back(c);

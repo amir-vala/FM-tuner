@@ -7,12 +7,18 @@
 #include <process.h>
 #include <windows.h>
 #include "DiscoveryServer.h"
+#include "NetworkUtils.h"
 
 using json = nlohmann::json;
 
 class VirtualTuner {
 public:
-    VirtualTuner(uint32_t deviceId, int port) : deviceId_(deviceId), port_(port), discovery_(deviceId, port) {}
+    VirtualTuner(uint32_t deviceId, int port)
+        : deviceId_(deviceId), port_(port), localIp_(GetLocalIPAddress()),
+          discovery_(deviceId, port, localIp_)
+    {
+        std::cout << "[Tuner] Initialized with IP: " << localIp_ << std::endl;
+    }
 
     void run() {
         httplib::Server svr;
@@ -27,9 +33,8 @@ public:
             char idStr[9];
             snprintf(idStr, sizeof(idStr), "%08X", deviceId_);
             j["DeviceID"] = idStr;
-            // Note: In real scenarios, use actual LAN IP instead of 127.0.0.1
-            j["BaseURL"] = "http://127.0.0.1:" + std::to_string(port_);
-            j["LineupURL"] = "http://127.0.0.1:" + std::to_string(port_) + "/lineup.json";
+            j["BaseURL"] = "http://" + localIp_ + ":" + std::to_string(port_);
+            j["LineupURL"] = "http://" + localIp_ + ":" + std::to_string(port_) + "/lineup.json";
             res.set_content(j.dump(), "application/json");
         });
 
@@ -56,7 +61,7 @@ public:
                 json item;
                 item["GuideNumber"] = s["guideNumber"];
                 item["GuideName"] = s["guideName"];
-                item["URL"] = "http://127.0.0.1:" + std::to_string(port_) + "/auto/v" + s["guideNumber"].get<std::string>();
+                item["URL"] = "http://" + localIp_ + ":" + std::to_string(port_) + "/auto/v" + s["guideNumber"].get<std::string>();
                 lineup.push_back(item);
             }
             res.set_content(lineup.dump(), "application/json");
@@ -148,6 +153,7 @@ public:
 private:
     uint32_t deviceId_;
     int port_;
+    std::string localIp_;
     DiscoveryServer discovery_;
 };
 
